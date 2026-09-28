@@ -1,206 +1,74 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const FinPayApp());
+import 'screens/activity_screen.dart';
+import 'screens/cards_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/profile_screen.dart';
+import 'state/wallet_store.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final store = await WalletStore.load();
+  runApp(FinPayApp(store: store));
 }
 
 class FinPayApp extends StatelessWidget {
-  const FinPayApp({super.key});
+  const FinPayApp({super.key, required this.store});
+
+  final WalletStore store;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'FinPay',
-      theme: ThemeData(
-        useMaterial3: true,
+    const seed = Color(0xFF1E6BFF);
+    return WalletScope(
+      store: store,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'FinPay',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: seed),
+        ),
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: seed,
+            brightness: Brightness.dark,
+          ),
+        ),
+        home: const AppShell(),
       ),
-      home: const HomeScreen(),
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class AppShell extends StatefulWidget {
+  const AppShell({super.key});
+
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  int _index = 0;
+
+  void _goTo(int index) => setState(() => _index = index);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'FinPay',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined),
-          ),
+      body: IndexedStack(
+        index: _index,
+        children: [
+          HomeScreen(onNavigate: _goTo),
+          const ActivityScreen(),
+          const CardsScreen(),
+          const ProfileScreen(),
         ],
       ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            const Text(
-              'Good Morning 👋',
-              style: TextStyle(
-                fontSize: 16,
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            const Text(
-              'Sasuni',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Balance Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                color: Colors.blue,
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Total Balance',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 15,
-                    ),
-                  ),
-
-                  SizedBox(height: 8),
-
-                  Text(
-                    'LKR 245,750.00',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  SizedBox(height: 8),
-
-                  Text(
-                    '**** 4582',
-                    style: TextStyle(
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-
-                _ActionButton(
-                  icon: Icons.send,
-                  title: 'Send',
-                  onTap: () {},
-                ),
-
-                _ActionButton(
-                  icon: Icons.download,
-                  title: 'Receive',
-                  onTap: () {},
-                ),
-
-                _ActionButton(
-                  icon: Icons.receipt_long,
-                  title: 'Bills',
-                  onTap: () {},
-                ),
-
-                _ActionButton(
-                  icon: Icons.more_horiz,
-                  title: 'More',
-                  onTap: () {},
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Recent Transactions',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('See All'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            _TransactionItem(
-              icon: Icons.work_outline,
-              title: 'Salary',
-              date: 'Today, 09:30 AM',
-              amount: '+ LKR 70,000',
-              isIncome: true,
-            ),
-
-            _TransactionItem(
-              icon: Icons.local_cafe_outlined,
-              title: 'Coffee',
-              date: 'Today, 08:15 AM',
-              amount: '- LKR 850',
-              isIncome: false,
-            ),
-
-            _TransactionItem(
-              icon: Icons.shopping_bag_outlined,
-              title: 'Shopping',
-              date: 'Yesterday',
-              amount: '- LKR 4,500',
-              isIncome: false,
-            ),
-          ],
-        ),
-      ),
-
       bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
+        selectedIndex: _index,
+        onDestinationSelected: _goTo,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -208,13 +76,14 @@ class HomeScreen extends StatelessWidget {
             label: 'Home',
           ),
           NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long),
+            label: 'Activity',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.credit_card_outlined),
             selectedIcon: Icon(Icons.credit_card),
             label: 'Cards',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.swap_horiz),
-            label: 'Transfer',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
@@ -222,100 +91,6 @@ class HomeScreen extends StatelessWidget {
             label: 'Profile',
           ),
         ],
-      ),
-    );
-  }
-}
-
-
-// Quick Action Button
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              color: Colors.blue.shade50,
-            ),
-            child: Icon(
-              icon,
-              color: Colors.blue,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-// Transaction Item
-
-class _TransactionItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String date;
-  final String amount;
-  final bool isIncome;
-
-  const _TransactionItem({
-    required this.icon,
-    required this.title,
-    required this.date,
-    required this.amount,
-    required this.isIncome,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-
-      leading: CircleAvatar(
-        child: Icon(icon),
-      ),
-
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-
-      subtitle: Text(date),
-
-      trailing: Text(
-        amount,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: isIncome ? Colors.green : Colors.red,
-        ),
       ),
     );
   }
